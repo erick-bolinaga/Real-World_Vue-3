@@ -5,12 +5,16 @@
 
 <script>
 export default {
-    props: ['event'],
+    props: ["event"],
+    inject: ["GStore"],
     methods: {
         register() {
             // Call to API
             // If registered then redirect to event details
-
+            this.GStore.flashMessage = "You are successfully registered for" + this.event.title;
+            setTimeout(() => {
+                this.GStore.flashMessage = ""
+            }, 3000);
             this.$router.push({
                 name: "EventDetails",
                 // params: { id: this.event.id } ... Since is a nested route and id is required by the parent route, we don't need to pass it

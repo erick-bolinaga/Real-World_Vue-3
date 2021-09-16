@@ -7,6 +7,9 @@ import EventEdit from "../views/event/Edit.vue";
 import About from "../views/About.vue";
 import NotFound from "../views/NotFound.vue";
 import NetworkError from "../views/NetworkError.vue";
+import NProgress from "nprogress";
+import EventService from "@/services/EventService.js";
+import GStore from "@/store";
 
 const routes = [
   {
@@ -18,18 +21,35 @@ const routes = [
   {
     path: "/about-us",
     name: "About",
-    component: About,
+    component: About
     // alias: "/about" .... Beware of multiple urls pointing the same content with Google SEO
   },
   {
     path: "/about",
-    redirect: { name: 'About' }
+    redirect: { name: "About" }
   },
   {
     path: "/events/:id",
     name: "EventLayout",
     props: true,
     component: EventLayout,
+    beforeEnter: to => {
+      return EventService.getEvent(to.params.id)
+        .then(response => {
+          // this.event = response.data
+          GStore.event = response.data;
+        })
+        .catch(error => {
+          if (error.response && error.response.status == 404) {
+            return {
+              name: "404Resource",
+              params: { resource: "event" }
+            };
+          } else {
+            return { name: "NetworkError" };
+          }
+        });
+    },
     children: [
       {
         path: "",
@@ -51,8 +71,8 @@ const routes = [
   {
     path: "/event/:afterEvent(.*)",
     redirect: to => {
-      return { path: "/events/" + to.params.afterEvent }
-    },
+      return { path: "/events/" + to.params.afterEvent };
+    }
     // Alternative way of redirecting children
     // path: "/event/:id",
     // redirect: () => {
@@ -84,6 +104,14 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
   routes
+});
+
+router.beforeEach(() => {
+  NProgress.start();
+});
+
+router.afterEach(() => {
+  NProgress.done();
 });
 
 export default router;
